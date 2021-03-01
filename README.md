@@ -36,7 +36,7 @@ created from them (left). For details regarding the adaptation from unweighted t
 
 <!---- References: ---->
 [0.1]: https://arxiv.org/abs/1303.2503
-[0.2]: hierarchy_coordinates.py
+[0.2]: HierarchyCoordinates.py
 [0.3]: https://www.pnas.org/content/suppl/2013/07/25/1300832110.DCSupplemental
 [0.5]: readme_docs/Emergence%20of%20Hierarchy%20via%20Local%20Adaptation%20to%20Diffusion.pdf
 
