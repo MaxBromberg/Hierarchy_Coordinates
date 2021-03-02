@@ -177,20 +177,20 @@ def node_weighted_condense(A, num_thresholds=8, threshold_distribution=None):
     """
 
     # Establishing Thresholds
-    if num_thresholds == 1:
+    if num_thresholds == 1 or np.isclose(np.max(A) - np.min(A), 0, 1e-2):
         nx_graphs = [nx.from_numpy_matrix(A, create_using=nx.DiGraph)]
     else:
         if threshold_distribution is None:
-            if np.isclose(np.max(A)-np.min(A), 0, 1e-2): print(f"Breadth of A: {np.max(A)-np.min(A)}")
             try:
-                thresholds = list(np.round(np.arange(np.min(A), np.max(A), (np.max(A - np.min(A))) / num_thresholds), 4))
+                thresholds = list(np.round(np.arange(np.min(A), np.max(A), (np.max(A - np.min(A))) / num_thresholds), 4))  # linear distribution
             except:
                 thresholds = [np.max(A)]*num_thresholds
         else:
             thresholds = distribute(dist=threshold_distribution, end_value_range=(np.min(A), np.max(A)), n=num_thresholds)
         # Converting to binary nx_graphs according to thresholds:
         nx_graphs = [nx.from_numpy_matrix(np.where(A > threshold, 1, 0), create_using=nx.DiGraph) for threshold in thresholds]
-
+    nx_graphs = [graph for graph in nx_graphs if not nx.is_empty(graph)]  # eliminates empty graphs
+    # TODO: Possibly better to count empty graphs as a 0
     condensed_graphs = [nx.condensation(nx_graphs[index]) for index in range(len(nx_graphs))]
     largest_condensed_graphs = []
     for condensed_graph in condensed_graphs:
@@ -390,9 +390,8 @@ def recursive_leaf_removal(G, from_top=True, keep_linkless_layer=False):
     dissected_graphs = [copy.deepcopy(G)]
     while len(dissected_graphs[-1].nodes()) > 1:
         dissected_graphs.append(leaf_removal(dissected_graphs[-1], forward=from_top))
-    # print(f"num_nodes in {len(dissected_graphs)} layers: {[len(dissected_graphs[i].nodes()) for i in range(len(dissected_graphs))]}")
     if not keep_linkless_layer:
-        while nx.is_empty(dissected_graphs[-1]):  # TODO: fails for empty graph set
+        while nx.is_empty(dissected_graphs[-1]) and len(dissected_graphs) > 1:  # catches empty graphs, which are eliminated in node condense
             dissected_graphs = dissected_graphs[:-1]  # removes empty or single node layer
     return dissected_graphs
 
@@ -440,9 +439,9 @@ def orderability(G, condensed_nx_graph=None, num_thresholds=8, threshold_distrib
      Proceedings of the National Academy of Sciences 110, no. 33 (2013)
     """
 
-    if not np.array_equal(np.unique(nx.to_numpy_array(G)), [0, 1]):  # binary check
+    if not np.array_equal(np.unique(nx.to_numpy_array(G)), [0, 1]):  # unweighted (non-binary) check
         o = 0
-        condensed_graphs, original_graphs = node_weighted_condense(nx.to_numpy_array(G),
+        condensed_graphs, original_graphs = node_weighted_condense(nx.to_numpy_array(G),  # creates binary graphs
                                                                    num_thresholds=num_thresholds,
                                                                    threshold_distribution=threshold_distribution)
 
@@ -845,10 +844,13 @@ def hierarchy_coordinates(A, num_thresholds=8, threshold_distribution=None):
     if isinstance(A, nx.DiGraph) or isinstance(A, nx.Graph) or isinstance(A, nx.MultiGraph) or isinstance(A, nx.MultiDiGraph):
         np_A = nx.to_numpy_array(A)
     elif isinstance(A, np.ndarray):
-        np_A = np.array(A)
+        np_A = A
     else:
         print('A must be given as either a networkx graph or adjacency matrix (as nested list or 2d numpy array)')
 
+    if np.array_equal(np.unique(np_A), [0]):  # null check
+        # raise Exception("Unconnected graph; trivially 0 hierarchy")  # TODO: Raise exception if undefined instead
+        return 0, 0, 0
     if np.array_equal(np.unique(np_A), [0, 1]):  # binary check
         num_thresholds = 1
     else:
