@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
 import copy
+from math import log2
 
 """
 Implementation of the hierarchy coordinates via networkX from 
@@ -614,7 +615,7 @@ def graph_entropy(DAG, forward_entropy=False):
         # TODO: Not so sure about this unless k coincides with the number of steps already taken (and the sum is odd)
     else:
         B = matrix_normalize(nx.to_numpy_array(dag), row_normalize=False)
-        P = sum([np.power(B, k) for k in range(1, L_GC+1)])
+        P = sum([np.power(B.T, k) for k in range(1, L_GC+1)])
 
     boundary_layer = max_min_layers(dag, max_layer=forward_entropy)
     non_extremal_nodes = set(dag.nodes() - boundary_layer)
@@ -622,9 +623,11 @@ def graph_entropy(DAG, forward_entropy=False):
     for layer_node in boundary_layer:
         for non_extremal_node in non_extremal_nodes:
             if forward_entropy:
-                entropy += P[layer_node][non_extremal_node] * np.log(dag.out_degree(layer_node))  # nan for 0 outdegree
+                # entropy += P[layer_node][non_extremal_node] * np.log(dag.out_degree(layer_node))  # nan for 0 outdegree
+                entropy += P[layer_node][non_extremal_node] * log2(dag.out_degree(layer_node))  # nan for 0 outdegree
             else:
-                entropy += P[non_extremal_node][layer_node] * np.log(dag.in_degree(layer_node))
+                # entropy += P[layer_node][non_extremal_node] * np.log(dag.in_degree(layer_node))
+                entropy += P[layer_node][non_extremal_node] * log2(dag.in_degree(layer_node))
     entropy /= len(boundary_layer)
     return entropy
 
@@ -699,7 +702,8 @@ def infographic_graph_entropy(DAG, forward_entropy=False):
                     n = sum([dag.in_degree(node) for node in path[:-1] if dag.in_degree(node) != 1])
                     if n == 0:
                         n = 1
-                entropy += np.log(n) / n
+                # entropy += np.log(n) / n
+                entropy += log2(n) / n
     entropy /= len(start_layer)
     return entropy
 

@@ -4,7 +4,7 @@ A package for calculation of hierarchy coordinates of networks, as originally fo
 networks<sup id="a1">[1](#f1)</sup> by [Corominas-Murta et al. (2013)][0.1] in _On the Origins of Hierarchy in Complex Networks_,
 and subsequently implemented in Matlab v7, this package provides a python3 implementation which includes weighted networks. 
 
-Hierarchy coordinates describe a network in terms of its treeness, orderability, and feedforwardness (TFO coordinates),
+Hierarchy coordinates describe a network in terms of its treeness, feedforwardness, and orderability (TFO coordinates),
 which collectively describe the relevant aspects of hierarchy for many networks. Below is an illustration by [Corominas-Murta et al. (2013)][0.1] 
 of the hierarchy morphospace with example networks illustrated for accessible coordinates. 
 ![Abstracted Hierarchy coordinate space, with example networks for each theoretically accessible region of the
